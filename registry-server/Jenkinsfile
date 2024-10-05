@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // 해당 Jenkinsfile이 있는 디렉토리가 작업 됩니다.
         serviceName = 'registry-server'
         imageName = "${serviceName}:${env.BUILD_ID}"
         dockerImage = ''
@@ -16,22 +15,18 @@ pipeline {
 
     stages {
         stage('Cloning Repository') {
+            when {
+                changeset "${serviceName}/**"
+            }
             steps {
                 echo 'Cloning Repository...'
                 script {
                     deleteDir()
 
-                    sh '''
-                        git init
-                        
-                        git remote add origin https://github.com/N0WST4NDUP/WhereHouse-for-MSA.git
-                        
-                        git config core.sparseCheckout true
-                        
-                        echo "wh-registry-server/*" > .git/info/sparse-checkout
-                        
-                        git pull origin main
-                    '''
+                    git branch: 'main',
+                        credentialsId: gitHubCredential,
+                        url: 'git@github.com:N0WST4NDUP/WhereHouse-for-MSA.git'
+
                 }
             }
             post {
@@ -45,9 +40,14 @@ pipeline {
         }
      
         stage('Build Gradle') {
+            when {
+                changeset "${serviceName}/**"
+            }
             steps {
                 echo 'Build Gradle...'
-                sh './gradlew build'
+                dir(serviceName) {
+                    sh './gradlew build'
+                }
             }
             post {
                 success {
@@ -60,10 +60,15 @@ pipeline {
         }
         
         stage('Build DockerImage') {
+            when {
+                changeset "${serviceName}/**"
+            }
             steps {
                 echo 'Build DockerImage...'
-                script {
-                    dockerImage = docker.build imageName
+                dir(serviceName) {
+                    script {
+                        dockerImage = docker.build imageName
+                    }
                 }
             }
             post {
@@ -77,11 +82,16 @@ pipeline {
         }
 
         stage('Push to DockerHub') {
+            when {
+                changeset "${serviceName}/**"
+            }
             steps {
                 echo 'Push to DockerHub'
-                script {
-                    docker.withRegistry( '', dockerHubCredential) {
-                        dockerImage.push() 
+                dir(serviceName) {
+                    script {
+                        docker.withRegistry( '', dockerHubCredential) {
+                            dockerImage.push() 
+                        }
                     }
                 }
             }
@@ -96,6 +106,9 @@ pipeline {
         }
         
         stage('Run') {
+            when {
+                changeset "${serviceName}/**"
+            }
             steps {
                 echo 'Pull Docker Image & Docker Image Run'
                 // 필요에 따라 수정
