@@ -124,7 +124,7 @@ pipeline {
                 // 필요에 따라 수정
                 sshagent (credentials: [sshCredential]) {
                     sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker rm -f ${serviceName} || true'"
-                    sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker pull ${imageName}'"
+                    sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker pull ${imageName}:latest'"
                     sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker run -d --name ${serviceName} ${imageName}'"
                 }
             }
