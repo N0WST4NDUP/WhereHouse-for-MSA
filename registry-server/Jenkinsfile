@@ -46,6 +46,7 @@ pipeline {
             steps {
                 echo 'Build Gradle...'
                 dir(serviceName) {
+                    sh 'chmod +x ./gradlew'
                     sh './gradlew build'
                 }
             }
