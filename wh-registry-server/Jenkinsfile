@@ -1,0 +1,134 @@
+pipeline {
+    agent any
+
+    environment {
+        // 해당 Jenkinsfile이 있는 디렉토리가 작업 됩니다.
+        serviceName = "registry-server"
+        imageName = "${serviceName}:${env.BUILD_ID}"
+        dockerImage = ''
+        gitHubCredential = 'github'
+        dockerHubCredential = 'dockerhub'
+        // 필요에 따라 추가
+        sshCredential = 'registry-server-ssh'
+        targetID = "root"
+        targetIP = "172.16.20.6"
+    }
+
+    stages {
+        stage('Cloning Repository') {
+            steps {
+                echo 'Cloning Repository...'
+                script {
+                    deleteDir()
+
+                    git branch: 'main',
+                        credentialsId: gitHubCredential,
+                        url: 'git@github.com:N0WST4NDUP/WhereHouse-for-MSA.git'
+
+                }
+            }
+            post {
+                success {
+                    echo 'Successfully cloned Repository.'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+     
+        stage('Build Gradle') {
+            steps {
+                echo 'Build Gradle...'
+                sh './gradlew build'
+            }
+            post {
+                success {
+                    echo 'Successfully bulided Gradle.'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+        
+        stage('Build DockerImage') {
+            steps {
+                echo 'Build DockerImage...'
+                script {
+                    dockerImage = docker.build imageName
+                }
+            }
+            post {
+                success {
+                    echo 'Successfully bulided DockerImage.'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                echo 'Push to DockerHub'
+                script {
+                    docker.withRegistry( '', dockerHubCredential) {
+                        dockerImage.push() 
+                    }
+                }
+            }
+            post {
+                success {
+                    echo 'Successfully DockerImage pushed to DockerHub'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+        
+        stage('Run') {
+            steps {
+                echo 'Pull Docker Image & Docker Image Run'
+                // 필요에 따라 수정
+                sshagent (credentials: [sshCredential]) {
+                    sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker rm -f ${serviceName} || true'"
+                    sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker pull ${imageName}'"
+                    sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker run -d --name ${serviceName} ${imageName}'"
+                }
+            }
+            post {
+                success {
+                    echo 'All processes have terminated successfully!!'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            discordSend(
+                title: "CI/CD Result",
+                description: imageName,
+                footer: "테스트 빌드가 성공했습니다.",
+                link: env.BUILD_URL,
+                result: currentBuild.currentResult,
+                webhookURL: credentials('discord-webhook')
+            )
+        }
+        failure {
+            discordSend(
+                title: "CI/CD Result",
+                description: imageName,
+                footer: "테스트 빌드가 실패했습니다.",
+                link: env.BUILD_URL,
+                result: currentBuild.currentResult,
+                webhookURL: credentials('discord-webhook')
+            )
+        }
+    }
+}
