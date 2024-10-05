@@ -139,7 +139,7 @@ pipeline {
                     discordSend(
                         title: 'Process Result',
                         description: serviceName,
-                        footer: '배포가 성공적으로 되었습니다.',
+                        footer: '배포가 성공적으로 마무리 되었습니다.',
                         link: env.BUILD_URL,
                         result: currentBuild.currentResult,
                         webhookURL: discordUrl
