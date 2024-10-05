@@ -129,27 +129,33 @@ pipeline {
                 }
             }
         }
+
+        stage('Notification') {
+            when {
+                changeset "${serviceName}/**"
+            }
+            post {
+                withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
+                    discordSend(
+                        title: 'Process Result',
+                        description: serviceName,
+                        footer: '배포가 성공적으로 되었습니다.',
+                        link: env.BUILD_URL,
+                        result: currentBuild.currentResult,
+                        webhookURL: discordUrl
+                    )
+                }
+            }
+        }
     }
 
     post {
-        success {
-            withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
-                discordSend(
-                    title: 'Process Result',
-                    description: imageName,
-                    footer: '테스트 빌드가 성공했습니다.',
-                    link: env.BUILD_URL,
-                    result: currentBuild.currentResult,
-                    webhookURL: discordUrl
-                )
-            }
-        }
         failure {
             withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
                 discordSend(
                     title: 'Process Result',
-                    description: imageName,
-                    footer: '테스트 빌드가 실패했습니다.',
+                    description: serviceName,
+                    footer: '배포에 실패 하였습니다.',
                     link: env.BUILD_URL,
                     result: currentBuild.currentResult,
                     webhookURL: discordUrl
