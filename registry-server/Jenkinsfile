@@ -27,6 +27,14 @@ pipeline {
                         credentialsId: gitHubCredential,
                         url: 'git@github.com:N0WST4NDUP/WhereHouse-for-MSA.git'
 
+                    withCredentials([file(credentialsId: "${serviceName}-properties", variable: 'properties')]) {
+                        dir(serviceName) {
+                            if (!fileExists("src/main/resources/") || !isDirectory("src/main/resources/")) {
+                                sh "mkdir -p src/main/resources/"
+                            }
+                            sh "cp ${properties} src/main/resources/"
+                        }
+                    }
                 }
             }
             post {
