@@ -21,10 +21,17 @@ pipeline {
                 script {
                     deleteDir()
 
-                    git branch: 'main',
-                        credentialsId: gitHubCredential,
-                        url: 'git@github.com:N0WST4NDUP/WhereHouse-for-MSA.git'
-
+                    sh '''
+                        git init
+                        
+                        git remote add origin https://github.com/N0WST4NDUP/WhereHouse-for-MSA.git
+                        
+                        git config core.sparseCheckout true
+                        
+                        echo "wh-registry-server/*" > .git/info/sparse-checkout
+                        
+                        git pull origin main
+                    '''
                 }
             }
             post {
