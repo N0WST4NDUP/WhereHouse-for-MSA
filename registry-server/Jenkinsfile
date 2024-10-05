@@ -68,7 +68,7 @@ pipeline {
                 echo 'Build DockerImage...'
                 dir(serviceName) {
                     script {
-                        dockerImage = docker.build imageName
+                        dockerImage = docker.build(imageName)
                     }
                 }
             }
@@ -90,8 +90,9 @@ pipeline {
                 echo 'Push to DockerHub'
                 dir(serviceName) {
                     script {
-                        docker.withRegistry( '', dockerHubCredential) {
-                            dockerImage.push() 
+                        docker.withRegistry('https://registry.hub.docker.com', dockerHubCredential) {
+                            dockerImage.push("${env.BUILD_NUMBER}")
+                            dockerImage.push("latest")
                         }
                     }
                 }
