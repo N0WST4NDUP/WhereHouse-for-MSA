@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         serviceName = 'registry-server'
-        imageName = "${serviceName}:${env.BUILD_ID}"
+        imageName = "n0wst4ndup/wherehouse-${serviceName}:${env.BUILD_ID}"
         dockerImage = ''
         gitHubCredential = 'github'
         dockerHubCredential = 'dockerhub'
