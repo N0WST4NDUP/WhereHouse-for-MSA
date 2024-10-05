@@ -12,6 +12,8 @@
 
 # Properties
 *.yml
+*.yaml
+application.properties
 
 # Package Files #
 *.jar
