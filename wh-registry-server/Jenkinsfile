@@ -111,24 +111,26 @@ pipeline {
 
     post {
         success {
-            discordSend(
-                title: "CI/CD Result",
-                description: imageName,
-                footer: "테스트 빌드가 성공했습니다.",
-                link: env.BUILD_URL,
-                result: currentBuild.currentResult,
-                webhookURL: credentials('discord-webhook')
-            )
+            withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
+                discordSend 
+                    title: "CI/CD Result",
+                    description: imageName,
+                    footer: "테스트 빌드가 성공했습니다.",
+                    link: env.BUILD_URL,
+                    result: currentBuild.currentResult,
+                    webhookURL: discordUrl
+            }
         }
         failure {
-            discordSend(
-                title: "CI/CD Result",
-                description: imageName,
-                footer: "테스트 빌드가 실패했습니다.",
-                link: env.BUILD_URL,
-                result: currentBuild.currentResult,
-                webhookURL: credentials('discord-webhook')
-            )
+            withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
+                discordSend 
+                    title: "CI/CD Result",
+                    description: imageName,
+                    footer: "테스트 빌드가 실패했습니다.",
+                    link: env.BUILD_URL,
+                    result: currentBuild.currentResult,
+                    webhookURL: discordUrl
+            }
         }
     }
 }
