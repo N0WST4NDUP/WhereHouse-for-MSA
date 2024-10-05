@@ -3,15 +3,15 @@ pipeline {
 
     environment {
         // 해당 Jenkinsfile이 있는 디렉토리가 작업 됩니다.
-        serviceName = "registry-server"
+        serviceName = 'registry-server'
         imageName = "${serviceName}:${env.BUILD_ID}"
         dockerImage = ''
         gitHubCredential = 'github'
         dockerHubCredential = 'dockerhub'
         // 필요에 따라 추가
         sshCredential = 'registry-server-ssh'
-        targetID = "root"
-        targetIP = "172.16.20.6"
+        targetID = 'root'
+        targetIP = '172.16.20.6'
     }
 
     stages {
@@ -112,22 +112,26 @@ pipeline {
     post {
         success {
             withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
-                discordSend title: "CI/CD Result",
+                discordSend(
+                    title: 'Process Result',
                     description: imageName,
-                    footer: "테스트 빌드가 성공했습니다.",
+                    footer: '테스트 빌드가 성공했습니다.',
                     link: env.BUILD_URL,
                     result: currentBuild.currentResult,
                     webhookURL: discordUrl
+                )
             }
         }
         failure {
             withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
-                discordSend title: "CI/CD Result",
+                discordSend(
+                    title: 'Process Result',
                     description: imageName,
-                    footer: "테스트 빌드가 실패했습니다.",
+                    footer: '테스트 빌드가 실패했습니다.',
                     link: env.BUILD_URL,
                     result: currentBuild.currentResult,
                     webhookURL: discordUrl
+                )
             }
         }
     }
