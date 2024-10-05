@@ -134,7 +134,7 @@ pipeline {
             when {
                 changeset "${serviceName}/**"
             }
-            post {
+            steps {
                 withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
                     discordSend(
                         title: 'Process Result',
