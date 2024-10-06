@@ -120,6 +120,7 @@ pipeline {
                 echo 'Pull Docker Image & Docker Image Run'
 
                 sshagent (credentials: [sshCredential]) {
+                    // 필요에 따라 수정
                     sh "docker rm -f ${serviceName} || true"
                     sh "docker pull ${imageName}"
                     sh "docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}"
