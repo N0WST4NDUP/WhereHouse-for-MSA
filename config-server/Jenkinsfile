@@ -4,7 +4,7 @@ pipeline {
     environment {
         serviceName = 'config-server'
         serverPort = '8887'
-        imageName = "n0wst4ndup/wherehouse-${serviceName}:latest"
+        imageName = "n0wst4ndup/wherehouse-${serviceName}"
         dockerImage = ''
         gitHubCredential = 'github'
         dockerHubCredential = 'dockerhub'
@@ -99,7 +99,7 @@ pipeline {
                 dir(serviceName) {
                     script {
                         docker.withRegistry('', dockerHubCredential) {
-                            dockerImage.push("${env.BUILD_NUMBER}")
+                            dockerImage.push("latest")
                         }
                     }
                 }
@@ -123,7 +123,7 @@ pipeline {
                     
                 sh "docker rm -f ${serviceName} || true"
                 sh "docker pull ${imageName}"
-                sh "docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}"
+                sh "docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}:latest"
             }
             post {
                 success {
