@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         serviceName = 'registry-server'
+        serverPort = '8761'
         imageName = "n0wst4ndup/wherehouse-${serviceName}:latest"
         dockerImage = ''
         gitHubCredential = 'github'
@@ -125,7 +126,7 @@ pipeline {
                 sshagent (credentials: [sshCredential]) {
                     sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker rm -f ${serviceName} || true'"
                     sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker pull ${imageName}'"
-                    sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker run -d --name ${serviceName} ${imageName}'"
+                    sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}'"
                 }
             }
             post {
