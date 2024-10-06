@@ -118,7 +118,7 @@ pipeline {
             }
             steps {
                 echo 'Pull Docker Image & Docker Image Run'
-                // 필요에 따라 수정
+
                 sshagent (credentials: [sshCredential]) {
                     sh "docker rm -f ${serviceName} || true"
                     sh "docker pull ${imageName}"
