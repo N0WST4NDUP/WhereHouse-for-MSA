@@ -122,7 +122,6 @@ pipeline {
                 sh "docker rm -f ${serviceName} || true"
                 sh "docker pull ${imageName}"
                 sh "docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}"
-                sh "docker image prune -a -y"
             }
             post {
                 success {
