@@ -118,14 +118,11 @@ pipeline {
             }
             steps {
                 echo 'Pull Docker Image & Docker Image Run'
-
-                sshagent (credentials: [sshCredential]) {
                     
-                    sh "docker rm -f ${serviceName} || true"
-                    sh "docker pull ${imageName}"
-                    sh "docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}"
-                    sh "docker image prune -f"
-                }
+                sh "docker rm -f ${serviceName} || true"
+                sh "docker pull ${imageName}"
+                sh "docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}"
+                sh "docker image prune -a -y"
             }
             post {
                 success {
