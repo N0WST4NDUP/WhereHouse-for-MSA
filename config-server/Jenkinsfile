@@ -1,0 +1,172 @@
+pipeline {
+    agent any
+
+    environment {
+        serviceName = 'config-server'
+        serverPort = '8887'
+        imageName = "n0wst4ndup/wherehouse-${serviceName}:latest"
+        dockerImage = ''
+        gitHubCredential = 'github'
+        dockerHubCredential = 'dockerhub'
+    }
+
+    stages {
+        stage('Cloning Repository') {
+            when {
+                changeset "${serviceName}/**"
+            }
+            steps {
+                echo 'Cloning Repository...'
+                script {
+                    deleteDir()
+
+                    git branch: 'main',
+                        credentialsId: gitHubCredential,
+                        url: 'git@github.com:N0WST4NDUP/WhereHouse-for-MSA.git'
+
+                    withCredentials([file(credentialsId: "${serviceName}-properties", variable: 'properties')]) {
+                        dir(serviceName) {
+                            if (!fileExists("src/main/resources/") || !isDirectory("src/main/resources/")) {
+                                sh "mkdir -p src/main/resources/"
+                            }
+                            sh "cp \$properties src/main/resources/"
+                        }
+                    }
+                }
+            }
+            post {
+                success {
+                    echo 'Successfully cloned Repository.'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+     
+        stage('Build Gradle') {
+            when {
+                changeset "${serviceName}/**"
+            }
+            steps {
+                echo 'Build Gradle...'
+                dir(serviceName) {
+                    sh 'chmod +x ./gradlew'
+                    sh './gradlew build'
+                }
+            }
+            post {
+                success {
+                    echo 'Successfully bulided Gradle.'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+        
+        stage('Build DockerImage') {
+            when {
+                changeset "${serviceName}/**"
+            }
+            steps {
+                echo 'Build DockerImage...'
+                dir(serviceName) {
+                    script {
+                        dockerImage = docker.build(imageName)
+                    }
+                }
+            }
+            post {
+                success {
+                    echo 'Successfully bulided DockerImage.'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            when {
+                changeset "${serviceName}/**"
+            }
+            steps {
+                echo 'Push to DockerHub'
+                dir(serviceName) {
+                    script {
+                        docker.withRegistry('', dockerHubCredential) {
+                            dockerImage.push("${env.BUILD_NUMBER}")
+                            dockerImage.push("latest")
+                        }
+                    }
+                }
+            }
+            post {
+                success {
+                    echo 'Successfully DockerImage pushed to DockerHub'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+        
+        stage('Run') {
+            when {
+                changeset "${serviceName}/**"
+            }
+            steps {
+                echo 'Pull Docker Image & Docker Image Run'
+                // 필요에 따라 수정
+                sshagent (credentials: [sshCredential]) {
+                    sh "docker rm -f ${serviceName} || true"
+                    sh "docker pull ${imageName}"
+                    sh "docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}"
+                    sh "docker image prune -f"
+                }
+            }
+            post {
+                success {
+                    echo 'All processes have terminated successfully!!'
+                }
+                failure {
+                    error 'This pipeline stops here...'
+                }
+            }
+        }
+
+        stage('Notification') {
+            when {
+                changeset "${serviceName}/**"
+            }
+            steps {
+                withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
+                    discordSend(
+                        title: 'Process Result',
+                        description: serviceName,
+                        footer: '배포가 성공적으로 마무리 되었습니다.',
+                        link: env.BUILD_URL,
+                        result: currentBuild.currentResult,
+                        webhookURL: discordUrl
+                    )
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            withCredentials([string(credentialsId: 'discord-webhook', variable: 'discordUrl')]) {
+                discordSend(
+                    title: 'Process Result',
+                    description: serviceName,
+                    footer: '배포에 실패 하였습니다.',
+                    link: env.BUILD_URL,
+                    result: currentBuild.currentResult,
+                    webhookURL: discordUrl
+                )
+            }
+        }
+    }
+}
