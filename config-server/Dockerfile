@@ -1,5 +1,7 @@
 FROM openjdk:17-alpine
 
+WORKDIR /config-server
+
 ARG JAR_FILE=build/libs/*-SNAPSHOT.jar
 
 COPY ${JAR_FILE} app.jar

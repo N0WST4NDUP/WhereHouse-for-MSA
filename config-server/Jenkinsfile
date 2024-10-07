@@ -22,10 +22,7 @@ pipeline {
 
                     git url: 'git@github.com:N0WST4NDUP/WhereHouse-for-MSA.git',
                         credentialsId: gitHubCredential,
-                        branch: 'main',
-                        extensions: [
-                            [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: serviceName]]]
-                        ]
+                        branch: 'main'
 
                     withCredentials([file(credentialsId: "${serviceName}-properties", variable: 'properties')]) {
                         dir(serviceName) {
