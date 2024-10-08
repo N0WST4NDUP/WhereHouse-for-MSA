@@ -50,12 +50,9 @@ pipeline {
             }
             steps {
                 echo 'Build Gradle...'
-                cache(maxCacheSize: 5, caches: [
-                    cache(path: '../cache', key: serviceName)]) {
-                        dir(serviceName) {
-                            sh 'chmod +x ./gradlew'
-                            sh './gradlew build'
-                        }
+                dir(serviceName) {
+                    sh 'chmod +x ./gradlew'
+                    sh './gradlew build'
                 }
             }
             post {
