@@ -51,6 +51,7 @@ pipeline {
             steps {
                 echo 'Build Gradle...'
                 dir(serviceName) {
+                    echo 'Caching Gradle'
                     cache(maxCacheSize: 5, caches: [
                         cache(path: '.gradle', key: serviceName)
                         ]) {
