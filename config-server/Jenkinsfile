@@ -18,7 +18,7 @@ pipeline {
             steps {
                 echo 'Cloning Repository...'
                 script {
-                    deleteDir()
+                    // deleteDir()
 
                     git url: 'git@github.com:N0WST4NDUP/WhereHouse-for-MSA.git',
                         credentialsId: gitHubCredential,
