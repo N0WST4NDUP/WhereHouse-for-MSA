@@ -11,8 +11,8 @@
 .mtj.tmp/
 
 # Properties
-*.yml
-*.yaml
+application.yml
+application.yaml
 application.properties
 
 # Package Files #
