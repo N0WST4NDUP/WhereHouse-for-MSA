@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    config:
+      uri: http://172.16.10.6:8887
+      name: gateway
+  profiles:
+    active: service
