@@ -2,16 +2,16 @@ pipeline {
     agent any
 
     environment {
-        serviceName = 'registry-server'
-        serverPort = '8761'
-        imageName = "n0wst4ndup/wherehouse-${serviceName}:latest"
+        serviceName = 'gateway-service'
+        serverPort = '9000'
+        imageName = "n0wst4ndup/wherehouse-${serviceName}"
         dockerImage = ''
         gitHubCredential = 'github'
         dockerHubCredential = 'dockerhub'
         // 필요에 따라 추가
-        sshCredential = 'registry-server-ssh'
+        sshCredential = 'beomjin-server-ssh'
         targetID = 'root'
-        targetIP = '172.16.20.6'
+        targetIP = '192.168.10.6'
     }
 
     stages {
@@ -24,18 +24,9 @@ pipeline {
                 script {
                     deleteDir()
 
-                    git branch: 'main',
+                    git url: 'git@github.com:N0WST4NDUP/WhereHouse-for-MSA.git',
                         credentialsId: gitHubCredential,
-                        url: 'git@github.com:N0WST4NDUP/WhereHouse-for-MSA.git'
-
-                    withCredentials([file(credentialsId: "${serviceName}-properties", variable: 'properties')]) {
-                        dir(serviceName) {
-                            if (!fileExists("src/main/resources/") || !isDirectory("src/main/resources/")) {
-                                sh "mkdir -p src/main/resources/"
-                            }
-                            sh "cp \$properties src/main/resources/"
-                        }
-                    }
+                        branch: 'main'
                 }
             }
             post {
@@ -100,7 +91,6 @@ pipeline {
                 dir(serviceName) {
                     script {
                         docker.withRegistry('', dockerHubCredential) {
-                            dockerImage.push("${env.BUILD_NUMBER}")
                             dockerImage.push("latest")
                         }
                     }
@@ -126,7 +116,7 @@ pipeline {
                 sshagent (credentials: [sshCredential]) {
                     sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker rm -f ${serviceName} || true'"
                     sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker pull ${imageName}'"
-                    sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}'"
+                    sh "ssh -o StrictHostKeyChecking=no ${targetID}@${targetIP} 'docker run -d --name ${serviceName} -p ${serverPort}:${serverPort} ${imageName}:latest'"
                 }
             }
             post {
